@@ -5,16 +5,6 @@ chromium.setHeadlessMode = true;
 
 chromium.setGraphicsMode = false;
 
-await chromium.font(
-  "https://raw.githack.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf"
-);
-
-// const __dirname = dirname(fileURLToPath(import.meta.url));
-// console.log( await chromium.executablePath("node_modules/@sparticuz/chromium/bin") );
-// console.log( await chromium.executablePath("./node_modules/@sparticuz/chromium/bin") );
-// console.log( path.resolve("./node_modules/@sparticuz/chromium/bin") );
-// console.log( await chromium.executablePath(path.resolve("./node_modules/@sparticuz/chromium/bin")) );
-
 const ONE_HOUR = 60*60;
 const ONE_DAY = ONE_HOUR*24;
 const ONE_WEEK = ONE_DAY*7;
@@ -33,8 +23,7 @@ function isFullUrl(url) {
 async function screenshot(url, { format, viewport, dpr = 1, withJs = true, wait, timeout = 8500 }) {
   // Must be between 3000 and 8500
   timeout = Math.min(Math.max(timeout, 3000), 8500);
-  // console.log( await chromium.executablePath("node_modules/@sparticuz/chromium/bin") );
-  console.log( await chromium.executablePath() );
+
   const browser = await puppeteer.launch({
     executablePath: await chromium.executablePath(),
     args: chromium.args,
