@@ -2,7 +2,10 @@
   "name": "eleventy-api-screenshot",
   "version": "1.0.0",
   "description": "A service to add web page screenshots to your Eleventy sites.",
-  "scripts": {},
+  "type": "module",
+  "scripts": {
+    "start": "vercel dev"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -19,8 +22,10 @@
   },
   "homepage": "https://github.com/11ty/api-screenshot#readme",
   "dependencies": {
-    "@netlify/functions": "^1.0.0",
-    "chrome-aws-lambda": "^10.1.0",
-    "puppeteer-core": "^10.1.0"
+    "@sparticuz/chromium": "^126.0.0",
+    "puppeteer-core": "^22.13.1"
+  },
+  "devDependencies": {
+    "vercel": "^35.0.2"
   }
 }

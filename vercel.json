@@ -1,0 +1,17 @@
+{
+	"functions": {
+		"api/screenshot.js": {
+			"includeFiles": ""
+		}
+	},
+	"rewrites": [
+		{ "source": "/", "destination": "/api/screenshot/" },
+		{ "source": "/:url*", "destination": "/api/screenshot/" },
+		{ "source": "/:url/", "destination": "/api/screenshot/" },
+		{ "source": "/:url/:size/", "destination": "/api/screenshot/" },
+		{ "source": "/:url/:size/:ratio/", "destination": "/api/screenshot/" },
+		{ "source": "/:url/:size/:ratio/:zoom/", "destination": "/api/screenshot/" },
+		{ "source": "/:url/:size/:ratio/:zoom/:cachebust/", "destination": "/api/screenshot/" }
+	],
+	"trailingSlash": true
+}
