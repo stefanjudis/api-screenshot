@@ -6,13 +6,6 @@ A runtime service to use live website screenshots on your site.
 
 Read the [Blog post: Building an Automated Screenshot Service on Netlify in ~140 Lines of Code](https://www.zachleat.com/web/screenshots/).
 
-## Deploy
-
-<a href="https://app.netlify.com/start/deploy?repository=https://github.com/11ty/api-screenshot
-"><img src="https://www.netlify.com/img/deploy/button.svg" border="0" alt="Deploy to Netlify"></a>
-
-* You will _need_ to set an environment variable in the Netlify App UI `AWS_LAMBDA_JS_RUNTIME` with the value `nodejs12.x`. Read more at [Issue #17](https://github.com/11ty/api-screenshot/issues/17).
-
 ## Usage
 
 Image URLs have the formats:
