@@ -5,9 +5,9 @@ chromium.setHeadlessMode = true;
 
 chromium.setGraphicsMode = false;
 
-// await chromium.font(
-//   "https://raw.githack.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf"
-// );
+await chromium.font(
+  "https://raw.githack.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf"
+);
 
 // const __dirname = dirname(fileURLToPath(import.meta.url));
 // console.log( await chromium.executablePath("node_modules/@sparticuz/chromium/bin") );
