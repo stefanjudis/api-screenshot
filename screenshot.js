@@ -6,10 +6,10 @@ chromium.setHeadlessMode = true;
 chromium.setGraphicsMode = false;
 
 async function screenshot(url, options = {}) {
-	let { format = "jpeg", viewport = [375, 375], dpr = 1, withJs = true, wait, timeout = 8500 } = options;
+	let { format = "jpeg", viewport = [375, 375], dpr = 1, withJs = true, wait, timeout = 8000 } = options;
 
-  // Must be between 3000 and 8500
-  timeout = Math.min(Math.max(timeout, 3000), 8500);
+  // Must be between 500 and 8000
+  timeout = Math.min(Math.max(timeout, 500), 8000);
 
   const browser = await puppeteer.launch({
     executablePath: await chromium.executablePath(),
@@ -37,7 +37,7 @@ async function screenshot(url, options = {}) {
     new Promise(resolve => {
       setTimeout(() => {
         resolve(false); // false is expected below
-      }, timeout - 1500); // we need time to execute the window.stop before the top level timeout hits
+      }, Math.max(timeout, 0)); // we need time to execute the window.stop before the top level timeout hits
     }),
   ]);
 

@@ -6,6 +6,9 @@ const ONE_DAY = ONE_HOUR*24;
 const ONE_WEEK = ONE_DAY*7;
 const ONE_YEAR = ONE_DAY*365; // maximum s-maxage
 
+const VALID_UNDERSCORE_OPTIONS = ["timeout", "wait"];
+const VALID_PARAMS = ["url", "size", "ratio", "zoom", "options"];
+
 function isFullUrl(url) {
   try {
     new URL(url);
@@ -16,46 +19,70 @@ function isFullUrl(url) {
   }
 }
 
+function getRedirectUrl(url, size, aspectratio, zoom, pathOptions = {}) {
+  let optionsStr = Object.entries(pathOptions).map(([key, value]) => `_${key}:${value}`).join("");
+  return "/" + [url, size, aspectratio, zoom, optionsStr].filter(Boolean).join("/") + "/";
+}
+
 export async function GET(request, context) {
   // e.g. /https%3A%2F%2Fwww.11ty.dev%2F/small/1:1/smaller/
   let requestUrl = new URL(request.url);
   let pathSplit = requestUrl.pathname.split("/").filter(entry => !!entry);
-  let [url, size, aspectratio, zoom, cachebuster] = pathSplit;
-  let format = "jpeg"; // hardcoded for now, but png and webp are supported!
+  let [url, size, aspectratio, zoom, optionsString] = pathSplit;
   let viewport = [];
+  let forceDedupeRedirect = false;
+  let hasInvalidQueryParams = false;
 
   // Manage your own frequency by using a _ prefix and then a hash buster string after your URL
   // e.g. /https%3A%2F%2Fwww.11ty.dev%2F/_20210802/ and set this to today’s date when you deploy
   if(size && size.startsWith("_")) {
-    cachebuster = size;
+    optionsString = size;
     size = undefined;
   }
   if(aspectratio && aspectratio.startsWith("_")) {
-    cachebuster = aspectratio;
+    optionsString = aspectratio;
     aspectratio = undefined;
   }
   if(zoom && zoom.startsWith("_")) {
-    cachebuster = zoom;
+    optionsString = zoom;
     zoom = undefined;
   }
 
   // Options
   let pathOptions = {};
-  let optionsMatch = (cachebuster || "").split("_").filter(entry => !!entry);
+  let optionsMatch = (optionsString || "").split("_").filter(entry => !!entry);
   for(let o of optionsMatch) {
     let [key, value] = o.split(":");
-    pathOptions[key.toLowerCase()] = parseInt(value, 10);
+    if(!VALID_UNDERSCORE_OPTIONS.includes(key)) {
+      // don’t add to pathOptions
+      console.log( "Invalid underscore option key", key, value );
+      forceDedupeRedirect = true;
+    } else {
+      pathOptions[key.toLowerCase()] = parseInt(value, 10);
+    }
+  }
+
+  for(let [key, value] of requestUrl.searchParams.entries()) {
+    if(!VALID_PARAMS.includes(key)) {
+      console.log( "Invalid query param", key, value );
+      forceDedupeRedirect = true;
+      hasInvalidQueryParams = true;
+    }
   }
 
   let wait = ["load"];
   if(pathOptions.wait === 0) {
     wait = ["domcontentloaded"];
-  } else if(pathOptions.wait === 1) {
+  } else if(!pathOptions.wait || pathOptions.wait === 1) {
     wait = ["load"];
   } else if(pathOptions.wait === 2) {
     wait = ["load", "networkidle0"];
   } else if(pathOptions.wait === 3) {
     wait = ["load", "networkidle2"];
+  } else {
+    console.log( "Invalid wait value", pathOptions.wait );
+    delete pathOptions.wait;
+    forceDedupeRedirect = true;
   }
 
   let timeout;
@@ -63,47 +90,85 @@ export async function GET(request, context) {
     timeout = pathOptions.timeout * 1000;
   }
 
-  // Set Defaults
-  format = format || "jpeg";
-  aspectratio = aspectratio || "1:1";
-  size = size || "small";
-  zoom = zoom || "standard";
-
   let dpr;
   if(zoom === "bigger") {
     dpr = 1.4;
   } else if(zoom === "smaller") {
     dpr = 0.71428571;
-  } else if(zoom === "standard") {
+  } else if(!zoom || zoom === "standard") {
     dpr = 1;
+  } else {
+    console.log( "Invalid zoom", zoom );
+    zoom = undefined;
+    forceDedupeRedirect = true;
   }
 
-  if(size === "small") {
-    if(aspectratio === "1:1") {
+  if(!size || size === "small") {
+    if(!aspectratio || aspectratio === "1:1") {
       viewport = [375, 375];
     } else if(aspectratio === "9:16") {
       viewport = [375, 667];
+    } else {
+      console.log( "Invalid aspect ratio for small size", aspectratio );
+      aspectratio = undefined;
+      forceDedupeRedirect = true;
     }
   } else if(size === "medium") {
-    if(aspectratio === "1:1") {
+    if(!aspectratio || aspectratio === "1:1") {
       viewport = [650, 650];
     } else if(aspectratio === "9:16") {
       viewport = [650, 1156];
+    } else {
+      console.log( "Invalid aspect ratio for medium size", aspectratio );
+      aspectratio = undefined;
+      forceDedupeRedirect = true;
     }
   } else if(size === "large") {
     // 0.5625 aspect ratio not supported on large
-    if(aspectratio === "1:1") {
+    if(!aspectratio || aspectratio === "1:1") {
       viewport = [1024, 1024];
+    } else {
+      console.log( "Invalid aspect ratio for large size", aspectratio );
+      aspectratio = undefined;
+      forceDedupeRedirect = true;
     }
   } else if(size === "opengraph") {
-    // ignores aspectratio
+    // de-dupe to ignore aspectratio
+    if(aspectratio) {
+      // do nothing
+      console.log( "Ignoring aspect ratio for opengraph size", aspectratio );
+      aspectratio = undefined;
+    }
+
     // always maintain a 1200×630 output image
     if(zoom === "bigger") { // dpr = 1.4
       viewport = [857, 450];
     } else if(zoom === "smaller") { // dpr = 0.714
       viewport = [1680, 882];
-    } else {
+    } else if(!zoom) {
       viewport = [1200, 630];
+    } else {
+      console.log( "Invalid zoom for opengraph size", zoom );
+      aspectratio = undefined;
+      zoom = undefined;
+      forceDedupeRedirect = true;
+    }
+  } else {
+    console.log( "Invalid size", size );
+    size = undefined;
+    forceDedupeRedirect = true;
+  }
+
+  if(forceDedupeRedirect) {
+    let redirectUrl = getRedirectUrl(url, size, aspectratio, zoom, pathOptions);
+    if(requestUrl.pathname !== redirectUrl || hasInvalidQueryParams) {
+      console.log( "Hard de-dupe redirect from", requestUrl.pathname, "to", redirectUrl );
+      return new Response(null, {
+        status: 302,
+        headers: {
+          "location": redirectUrl,
+        }
+      })
     }
   }
 
@@ -118,6 +183,8 @@ export async function GET(request, context) {
       throw new Error("Incorrect API usage. Expects one of: /:url/ or /:url/:size/ or /:url/:size/:aspectratio/")
     }
 
+    let startTime = Date.now();
+    let format = "jpeg"; // hardcoded for now, but png and webp are supported!
     let output = await screenshot(url, {
       format,
       viewport,
@@ -127,7 +194,7 @@ export async function GET(request, context) {
     });
 
     // output to Function logs
-    console.log(url, format, { viewport }, { size }, { dpr }, { aspectratio });
+    console.log("Success:", url, `${Date.now() - startTime}ms`, JSON.stringify({ viewport, size, dpr, aspectratio }));
 
     return new Response(output, {
       status: 200,
@@ -137,7 +204,7 @@ export async function GET(request, context) {
       }
     });
   } catch (error) {
-    console.log("Error", error);
+    console.log("Error from", requestUrl.pathname, error);
 
     let width = viewport?.[0] || 1200;
     let height = viewport?.[1] || 630;
