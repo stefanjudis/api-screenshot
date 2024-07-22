@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A service to add web page screenshots to your Eleventy sites.",
   "type": "module",
+  "main": "screenshot.js",
   "scripts": {
     "start": "vercel dev"
   },
