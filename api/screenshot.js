@@ -1,5 +1,5 @@
-import screenshot from "../screenshot.js";
 import screenshotOptions from "../screenshot-options.js";
+import screenshot from "../screenshot.js";
 
 const ONE_MINUTE = 60;
 const ONE_HOUR = ONE_MINUTE*60;
@@ -123,6 +123,8 @@ export async function GET(request, context) {
       viewport = [375, 375];
     } else if(aspectratio === "9:16") {
       viewport = [375, 667];
+    } else if(aspectratio === '16:9') {
+      viewport = [667, 375];
     } else {
       console.log( "Invalid aspect ratio for small size", aspectratio );
       aspectratio = undefined;
@@ -133,6 +135,8 @@ export async function GET(request, context) {
       viewport = [650, 650];
     } else if(aspectratio === "9:16") {
       viewport = [650, 1156];
+    } else if(aspectratio === '16:9') {
+      viewport = [1156, 650];
     } else {
       console.log( "Invalid aspect ratio for medium size", aspectratio );
       aspectratio = undefined;
