@@ -6,6 +6,7 @@ const ONE_HOUR = ONE_MINUTE*60;
 const ONE_DAY = ONE_HOUR*24;
 const ONE_WEEK = ONE_DAY*7;
 const ONE_YEAR = ONE_DAY*365; // maximum s-maxage
+const TWO_WEEKS = ONE_WEEK*2;
 
 const VALID_UNDERSCORE_OPTIONS = ["timeout", "wait"];
 const VALID_PARAMS = ["url", "size", "ratio", "zoom", "options"];
@@ -229,7 +230,7 @@ export async function GET(request, context) {
       status: 200,
       headers: {
         "content-type": `image/${format}`,
-        "cache-control": `public, s-maxage=${ONE_YEAR}, stale-while-revalidate=${ONE_WEEK * 2}`
+        "cache-control": `public, s-maxage=${ONE_YEAR}, stale-while-revalidate=${TWO_WEEKS * 2}`
       }
     });
   } catch (error) {
