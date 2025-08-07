@@ -24,6 +24,8 @@ async function screenshot(url, options = {}) {
   });
 
   const page = await browser.newPage();
+  const defaultUserAgent = await page.browser().userAgent();
+  await page.setUserAgent(`${defaultUserAgent} StefanJudisScreenshotBot/1.0`);
 
   if(!withJs) {
     page.setJavaScriptEnabled(false);
