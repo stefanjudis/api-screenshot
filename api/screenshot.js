@@ -230,7 +230,7 @@ export async function GET(request, context) {
       status: 200,
       headers: {
         "content-type": `image/${format}`,
-        "cache-control": `public, s-maxage=${ONE_YEAR}, stale-while-revalidate=${TWO_WEEKS * 2}`
+        "cache-control": `public, max-age=${ONE_YEAR}, s-maxage=${ONE_YEAR}`
       }
     });
   } catch (error) {
